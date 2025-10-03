@@ -56,3 +56,244 @@ Each section of your JavaScript should be commented to explain its purpose.
 * Clear, modular, and well-commented JavaScript code
 * A clean and functional user experience
 
+
+// =========================================================
+// PART 1 & 2: Interactive Features (Event Handling & DOM Manipulation)
+// =========================================================
+
+// --- 1. Light/Dark Mode Toggle ---
+
+const themeToggle = document.getElementById('theme-toggle');
+const body = document.body;
+
+/**
+ * Toggles the 'dark-mode' class on the body element,
+ * changes the button text, and stores the preference in localStorage.
+ */
+function toggleDarkMode() {
+    // 1. Toggle the class on the body
+    body.classList.toggle('dark-mode');
+
+    // 2. Update button text based on the current state
+    const isDarkMode = body.classList.contains('dark-mode');
+    if (isDarkMode) {
+        themeToggle.textContent = '🌙 Toggle Light Mode';
+    } else {
+        themeToggle.textContent = '☀️ Toggle Dark Mode';
+    }
+
+    // 3. Store user preference (for persistence across sessions)
+    localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+}
+
+// Check localStorage for a previous theme preference on load
+const savedTheme = localStorage.getItem('theme');
+if (savedTheme === 'dark') {
+    // Apply dark mode if preference is found
+    toggleDarkMode(); 
+}
+
+// Event Listener for the Theme Toggle Button (Click event)
+themeToggle.addEventListener('click', toggleDarkMode);
+
+
+// --- 2. Collapsible FAQ Section ---
+
+const faqQuestions = document.querySelectorAll('.faq-question');
+
+/**
+ * Event handler for clicking an FAQ question.
+ * Toggles the 'open' class on the associated answer element.
+ */
+function handleFaqClick(event) {
+    // Get the button that was clicked
+    const questionButton = event.currentTarget;
+    
+    // The answer is the next sibling element after the button
+    const answer = questionButton.nextElementSibling;
+    
+    // Toggle the 'open' class to reveal/hide the answer
+    answer.classList.toggle('open');
+}
+
+// Attach a 'click' event listener to every FAQ question button
+faqQuestions.forEach(button => {
+    button.addEventListener('click', handleFaqClick);
+});
+
+
+// =========================================================
+// PART 3: Custom Form Validation
+// =========================================================
+
+const form = document.getElementById('registration-form');
+const nameInput = document.getElementById('name');
+const emailInput = document.getElementById('email');
+const passwordInput = document.getElementById('password');
+const successMessage = document.getElementById('form-success-message');
+
+// Regular Expressions for Validation
+// Name: Only letters, spaces, and hyphens, 2 to 50 characters
+const nameRegex = /^[A-Za-z\s-]{2,50}$/; 
+
+// Email: Standard email pattern
+const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+
+/* Password: 
+   - Must be at least 8 characters long (.{8,})
+   - Must contain at least one uppercase letter ((?=.*[A-Z]))
+   - Must contain at least one lowercase letter ((?=.*[a-z]))
+   - Must contain at least one digit ((?=.*\d))
+*/
+const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$/;
+
+
+/**
+ * Displays an error message for a specific input field.
+ * @param {HTMLElement} inputElement - The input field (e.g., nameInput).
+ * @param {string} message - The error message to display.
+ */
+function displayError(inputElement, message) {
+    // Error message element ID is structured as: [input-id]-error
+    const errorId = inputElement.id + '-error';
+    const errorElement = document.getElementById(errorId);
+    
+    // Set the message and apply error styling (optional, done via CSS classes in a real app)
+    if (errorElement) {
+        errorElement.textContent = message;
+        inputElement.style.border = '2px solid red'; // Simple inline styling for feedback
+    }
+}
+
+/**
+ * Clears the error message for a specific input field.
+ * @param {HTMLElement} inputElement - The input field.
+ */
+function clearError(inputElement) {
+    const errorId = inputElement.id + '-error';
+    const errorElement = document.getElementById(errorId);
+    
+    if (errorElement) {
+        errorElement.textContent = '';
+        inputElement.style.border = '1px solid #ccc'; // Reset border
+    }
+}
+
+
+/**
+ * Custom validation function for the Name field.
+ * @returns {boolean} True if valid, false otherwise.
+ */
+function validateName() {
+    const nameValue = nameInput.value.trim();
+    clearError(nameInput);
+    
+    if (nameValue === '') {
+        displayError(nameInput, 'Name is required.');
+        return false;
+    }
+    
+    if (!nameRegex.test(nameValue)) {
+        displayError(nameInput, 'Name must be 2-50 characters, only letters, spaces, or hyphens.');
+        return false;
+    }
+    
+    return true;
+}
+
+/**
+ * Custom validation function for the Email field.
+ * @returns {boolean} True if valid, false otherwise.
+ */
+function validateEmail() {
+    const emailValue = emailInput.value.trim();
+    clearError(emailInput);
+    
+    if (emailValue === '') {
+        displayError(emailInput, 'Email is required.');
+        return false;
+    }
+    
+    if (!emailRegex.test(emailValue)) {
+        displayError(emailInput, 'Please enter a valid email address.');
+        return false;
+    }
+    
+    return true;
+}
+
+/**
+ * Custom validation function for the Password field.
+ * @returns {boolean} True if valid, false otherwise.
+ */
+function validatePassword() {
+    const passwordValue = passwordInput.value;
+    clearError(passwordInput);
+
+    if (passwordValue === '') {
+        displayError(passwordInput, 'Password is required.');
+        return false;
+    }
+    
+    if (!passwordRegex.test(passwordValue)) {
+        displayError(passwordInput, 'Password must be 8+ chars, incl. uppercase, lowercase, and a digit.');
+        return false;
+    }
+    
+    return true;
+}
+
+/**
+ * Main form submission handler.
+ * Runs all validation functions and prevents submission if any fail.
+ * @param {Event} e - The form submission event.
+ */
+function handleFormSubmit(e) {
+    // 1. Prevent default HTML form submission
+    e.preventDefault(); 
+    
+    // Clear previous success message
+    successMessage.textContent = '';
+    
+    // 2. Run all validation checks
+    // Use short-circuiting AND (&&) to ensure all functions run,
+    // and the final result (isFormValid) is true only if ALL are true.
+    const isNameValid = validateName();
+    const isEmailValid = validateEmail();
+    const isPasswordValid = validatePassword();
+    
+    const isFormValid = isNameValid && isEmailValid && isPasswordValid;
+
+    // 3. Process submission based on validity
+    if (isFormValid) {
+        // Form is valid!
+        
+        // ***********************************************
+        // * In a real application, you would send data  *
+        // * to a server using the Fetch API here.       *
+        // ***********************************************
+        
+        // Show success message and reset the form
+        successMessage.textContent = '✅ Registration successful! Data validated and submitted.';
+        form.reset();
+        
+        // Clear success message after a few seconds
+        setTimeout(() => {
+            successMessage.textContent = '';
+        }, 5000);
+    } else {
+        // Form is invalid - errors are already displayed by the validation functions
+        console.log('Form submission failed due to validation errors.');
+    }
+}
+
+// Event Listener for the Form Submission
+form.addEventListener('submit', handleFormSubmit);
+
+// Optional: Add 'blur' or 'input' listeners for real-time validation feedback
+// This provides a better user experience by flagging errors immediately.
+nameInput.addEventListener('blur', validateName);
+emailInput.addEventListener('blur', validateEmail);
+passwordInput.addEventListener('blur', validatePassword);
+
+
